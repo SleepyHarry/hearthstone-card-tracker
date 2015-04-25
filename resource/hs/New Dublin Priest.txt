@@ -1,0 +1,17 @@
+Circle of Healing,2
+Inner Fire,2
+Power Word: Shield,2
+Northshire Cleric,2
+Divine Spirit,2
+Lightwell,2
+Shadow Word: Death,2
+Thoughtsteal,1
+Dark Cultist,2
+Shade of Naxxramas,2
+Auchenai Soulpriest,2
+Lightspawn,2
+Holy Nova,2
+Feugen,1
+Stalagg,1
+Holy Fire,2
+Cabal Shadow Priest,1

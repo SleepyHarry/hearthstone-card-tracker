@@ -1,0 +1,18 @@
+Backstab,2
+Cold Blood,2
+Deadly Poison,2
+Argent Squire,2
+Blade Flurry,1
+Eviscerate,2
+Haunted Creeper,2
+Loot Hoarder,1
+Nerubian Egg,2
+Harvest Golem,2
+SI:7 Agent,1
+Dark Iron Dwarf,2
+Defender of Argus,2
+Gnomish Inventor,2
+Leeroy Jenkins,1
+Assassin's Blade,1
+Azure Drake,2
+Argent Commander,1

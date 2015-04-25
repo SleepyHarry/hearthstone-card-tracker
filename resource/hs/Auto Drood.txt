@@ -1,0 +1,27 @@
+Innervate,1
+Moonfire,1
+Naturalize,2
+Leper Gnome,1
+Young Dragonhawk,1
+Wild Growth,1
+Amani Berserker,1
+Crazed Alchemist,1
+Master Swordsmith,1
+Nerub'ar Weblord,1
+Healing Touch,2
+Mark of Nature,1
+Savage Roar,1
+Acolyte of Pain,1
+Big Game Hunter,1
+Bite,1
+Chillwind Yeti,1
+Dark Iron Dwarf,1
+Dragonling Mechanic,1
+Nourish,1
+Abomination,1
+Fen Creeper,1
+Spectral Knight,1
+Spiteful Smith,1
+Reckless Rocketeer,2
+Ancient of Lore,1
+Ironbark Protector,1

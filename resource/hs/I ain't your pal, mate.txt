@@ -1,0 +1,18 @@
+Equality,2
+Wild Pyromancer,2
+Aldor Peacekeeper,2
+Big Game Hunter,1
+Earthen Ring Farseer,2
+Truesilver Champion,2
+Consecration,2
+Sen'jin Shieldmasta,2
+Spellbreaker,2
+Azure Drake,2
+Harrison Jones,1
+Sludge Belcher,2
+Avenging Wrath,1
+Argent Commander,2
+Guardian of Kings,2
+Lay on Hands,1
+Ragnaros the Firelord,1
+Tirion Fordring,1
