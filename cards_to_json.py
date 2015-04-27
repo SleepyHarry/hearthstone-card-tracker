@@ -60,7 +60,7 @@ def main(quiet=True):
                                "entry {}/100").format(page, i+1)
 
                     card = process_card(entry)
-                    cards[card.type][card.name.lower()] = card._asdict()
+                    cards[card.type][card.name] = card._asdict()
                 except Exception, e:
                     #no idea, keep going and deal with it later
                     print e
