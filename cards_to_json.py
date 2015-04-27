@@ -48,14 +48,16 @@ def process_card(row):
     return Card(*([html_unescape(td.getText()) for td in tds] +\
                   [rarity, card_set]))
 
-def main():
+def main(quiet=True):
     cards = []
     
     for page in range(1, 12):
         try:
             for i, entry in enumerate(get_rows(get_soup(page))):
                 try:
-                    print "Fetching page {}, entry {}/100".format(page, i+1)
+                    if not quiet:
+                        print ("Fetching page {},"
+                               "entry {}/100\r").format(page, i+1),
                     cards.append(process_card(entry))
                 except Exception, e:
                     #no idea, keep going and deal with it later
@@ -64,4 +66,4 @@ def main():
             print "Couldn't connect to page", page
 
     with open("resource/cards.json", 'w') as f:
-        json.dump({"cards": cards}, f)
+        json.dump({"cards": map(Card._asdict, cards)}, f)
