@@ -17,8 +17,14 @@ class HSLog():
         #go to the end, there's so much gubbins at the start
         self.f.seek(0, 2)
 
+    def close_all(self):
+        self.f.close()
+        self.g.close()
+
     @property
     def drawn(self):
+        #TODO: Chromaggus bug
+        
         x = self.f.read()
         
         c = self.reg.findall(x)
