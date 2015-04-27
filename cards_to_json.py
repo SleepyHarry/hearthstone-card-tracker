@@ -2,7 +2,7 @@ import json
 import requests
 import re
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from BeautifulSoup import BeautifulSoup as bs
 
 url = ("http://www.hearthpwn.com/cards?filter-unreleased=1&&"
@@ -40,30 +40,32 @@ def html_unescape(text):
 def process_card(row):
     tds = row.childGenerator()
 
-    other_info = dict(row.first('a').attrs)["class"]
+    other_info = dict(row.first('a').attrs)
 
     rarity, card_set = re.match(r"rarity-([0-9]+) set-([0-9]+).*",
-                                other_info).groups()
+                                other_info["class"]).groups()
 
-    return Card(*([html_unescape(td.getText()) for td in tds] +\
+    return Card(*([html_unescape(td.getText()) for td in tds] + \
                   [rarity, card_set]))
 
 def main(quiet=True):
-    cards = []
+    cards = defaultdict(dict)
     
     for page in range(1, 12):
         try:
             for i, entry in enumerate(get_rows(get_soup(page))):
                 try:
                     if not quiet:
-                        print ("Fetching page {},"
-                               "entry {}/100\r").format(page, i+1),
-                    cards.append(process_card(entry))
+                        print ("Fetching page {}, "
+                               "entry {}/100").format(page, i+1)
+
+                    card = process_card(entry)
+                    cards[card.type][card.name.lower()] = card._asdict()
                 except Exception, e:
                     #no idea, keep going and deal with it later
-                    print e.args, "page", page, ", entry", entry
+                    print e
         except ConnectionError:
             print "Couldn't connect to page", page
 
     with open("resource/cards.json", 'w') as f:
-        json.dump({"cards": map(Card._asdict, cards)}, f)
+        json.dump({"cards": cards}, f)
