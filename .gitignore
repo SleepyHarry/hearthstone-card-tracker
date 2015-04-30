@@ -99,3 +99,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# =========================
+# Other
+# =========================
+
+#testing files etc.
+*.hsd
+temp

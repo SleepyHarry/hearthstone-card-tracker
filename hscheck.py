@@ -2,6 +2,8 @@ import time
 import re
 
 class HSLog():
+    #does this really need to be a class? Can't all this just be top level?
+    
     reg = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY DECK.*\n')
     mul = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY HAND -> FRIENDLY DECK.*\n')
     gvgdraw = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from  -> FRIENDLY HAND.*\n')
@@ -35,9 +37,11 @@ class HSLog():
                'm': m}
 
         if not (c or m or g):
-            #no match, it's possible that the full line hasn't been written yet, so
-            #track back and try again next loop
-            self.f.seek(-len(x), 1)    #1 means move relative to where we are currently
+            #no match, it's possible that the full line hasn't been written yet,
+            #so track back and try again next loop
+            
+            #1 means move relative to where we are currently
+            self.f.seek(-len(x), 1)
 
         return out
 
