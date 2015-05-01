@@ -102,7 +102,10 @@ class DeckDisplay(pg.Surface):
         self.fill(bgblue)
         
         #draw the cards we have onto ourselves
-        for i, (card, quantity) in enumerate(self.deck["cards"].items()):
+        deck = sorted(self.deck["cards"].items(),
+                      key=lambda x: get_card(x[0]).cost)
+        
+        for i, (card, quantity) in enumerate(deck):
             #copy so that we can add quantity without affecting the base
             card_img = self.get_card_slot_image(card).copy()
 

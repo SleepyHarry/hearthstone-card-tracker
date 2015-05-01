@@ -20,6 +20,7 @@ clock = pg.time.Clock()
 
 screen = pg.display.set_mode(size, pg.NOFRAME)
 
+#magic
 windll.user32.SetWindowPos(pg.display.get_wm_info()["window"],
                            -1, 1920-width, 0, 0, 0, 0x0001)
 ##
