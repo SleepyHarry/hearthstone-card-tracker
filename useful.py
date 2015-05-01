@@ -19,32 +19,26 @@ class Point(tuple):
     def __repr__(self):
         return "Point({}, {})".format(*self)
 
-def load_image(name, colorkey=None):
+def load_image(fullname, colorkey=None):
     import pygame as pg
     import os
 
     if not pg.display.get_init():
         pg.init()
-    
-    #TODO: make os-independant
-    #maybe just check it exists?
-    if "C:" in name.upper():    #fucking ew
-        fullname = name
-##        print "absolute"
-    else:
-        fullname = os.path.join('resource', name)
-##        print "relative"
         
     try:
         image = pg.image.load(fullname)
     except pg.error, message:
 ##        print 'Cannot load image:', fullname
-        raise SystemExit, message
+##        raise SystemExit, message
+        raise Exception('Cannot load image: ' + fullname)
+    
     image = image.convert()
     if colorkey is not None:
         if colorkey is -1:
             colorkey = image.get_at((0,0))
         image.set_colorkey(colorkey, pg.RLEACCEL)
+    
     return image
 
 class colors:

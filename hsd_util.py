@@ -1,7 +1,8 @@
 ''' Does everything to do with the .hsd file format
 
     The goal of this to faciliate the loading and saving of Hearthstone decks,
-    by providing a high-level API with .hsd files
+    by providing a high-level API with .hsd files, thus meaning that we don't
+    have to deal with deck-related files anywhere but here
 
     Under the covers, .hsd are simply pickles of Deck objects, which themselves
     are just glorified dicts
@@ -17,15 +18,34 @@ class NoSuchDeckExists(Exception):
 class DeckExistsWarning(Warning):
     pass
 
-class Deck(dict):
-    def __init__(self, cards, hero='', fmt=''):
-        if issubclass(type(cards), Counter):
-            self["cards"] = cards
-        else:
-            self["cards"] = Counter(cards)
+class CardNotInDeckError(Exception):
+    pass
 
+class Deck(dict):
+    def __init__(self, cards=None, hero='', fmt=''):
+        #we can supply a Counter or a sequence iterable
+        if cards is None:
+            #we want an empty deck
+            cards = dict()
+        
+        self["cards"] = Counter(cards)
+        
         self["hero"] = hero
         self["format"] = fmt
+
+    def add_card(self, cardname):
+        self["cards"][cardname] += 1
+
+    def take_card(self, cardname):
+        #TODO: Clean this up. Four references to self["cards"][cardname] is
+        #      silly
+        if self["cards"][cardname] <= 0:
+            raise CardNotInDeckError()
+
+        self["cards"][cardname] -= 1
+
+        if self["cards"][cardname] == 0:
+            del self["cards"][cardname]
 
     def save(self, filename, force=False):
         if not force and os.path.exists(filename):
