@@ -8,7 +8,7 @@ from textFuncs import *
 
 from hscheck import HSLog
 from hsd_util import Deck
-from deck_display import DeckDisplay
+from deck_display import DeckDisplay, Card, cards
 
 ## Pygame display stuff
 pg.init()
@@ -48,7 +48,11 @@ while True:
             mX, mY = pg.mouse.get_pos()
 
             if m1:
-                dd.add_card("Kel'Thuzad")
+                minions = cards["Minion"].keys()
+                spells = cards["Ability"].keys()
+                weapons = cards["Weapon"].keys()
+
+                dd.add_card(random.choice(minions + spells + weapons))
 
             if m2:
                 dd.take_card(random.choice(dd.deck["cards"].keys()))

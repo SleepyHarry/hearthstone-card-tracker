@@ -22,8 +22,8 @@ class Card:
         for k, v in card_data.items():
             setattr(self, k, v)
 
-def get_card(cardname, collectible_only=True):
-    possibles = ["Minion", "Ability"] if collectible_only else cards.keys()
+def get_card(cardname, no_heroes=True):
+    possibles = ["Minion", "Ability", "Weapon"] if no_heroes else cards.keys()
 
     for possible in possibles:
         try:
@@ -103,7 +103,7 @@ class DeckDisplay(pg.Surface):
         
         #draw the cards we have onto ourselves
         deck = sorted(self.deck["cards"].items(),
-                      key=lambda x: get_card(x[0]).cost)
+                      key=lambda x: int(get_card(x[0]).cost))
         
         for i, (card, quantity) in enumerate(deck):
             #copy so that we can add quantity without affecting the base
