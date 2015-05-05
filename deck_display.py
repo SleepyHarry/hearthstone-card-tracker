@@ -12,9 +12,15 @@ size = width, height = 245, CARD_HEIGHT*20
 
 bgblue = (27, 30, 37)
 
-cards = json.load(open("resource/cards.json"))["cards"]
+all_cards = json.load(open("resource/cards.json"))["cards"]
 
-class NoSuchCard(Exception):
+#This is not perfect. For example, "Misha" and "Devilsaur" are in here
+collectible_cards = {t: {name: card for name, card in all_cards[t].items()
+                         if card["rarity"] != u'0'}
+                     for t in ["Minion", "Weapon", "Ability"]}
+
+
+class NoSuchCard(KeyError):
     pass
 
 class Card:
@@ -22,17 +28,16 @@ class Card:
         for k, v in card_data.items():
             setattr(self, k, v)
 
-def get_card(cardname, no_heroes=True):
-    possibles = ["Minion", "Ability", "Weapon"] if no_heroes else cards.keys()
+def get_card(cardname, collectible=True):
+    cards = collectible_cards if collectible else all_cards
 
-    for possible in possibles:
+    for possible in cards.keys():
         try:
             return Card(cards[possible][cardname])
         except KeyError:
             pass
 
-    #Couldn't find the card
-    raise NoSuchCard()
+    raise NoSuchCard("Cannot find " + cardname)
 
 class DeckDisplay(pg.Surface):
     _card_slot_images = {}
