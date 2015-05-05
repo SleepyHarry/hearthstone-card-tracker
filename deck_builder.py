@@ -1,6 +1,8 @@
 import pygame as pg
 import os, sys, time, random, math
 
+import Tkinter, tkFileDialog
+
 from useful import load_image, colors
 from textFuncs import *
 
@@ -8,6 +10,9 @@ from hsd_util import Deck
 from deck_display import DeckDisplay, all_cards, collectible_cards, get_card
 
 pg.init()
+
+root = Tkinter.Tk()
+root.withdraw()
 
 size = width, height = 1280, 960
 fps_tgt = 30
@@ -86,11 +91,16 @@ class Textbox(pg.Surface):
                 if k == 'z':
                     self.dd.take_last()
                 elif k == 's':
-                    #TODO: Prompt for a savename
-                    self.dd.save("resource/decks/test.hsd", True)
+                    #TODO: refocus main window
+                    file_path = tkFileDialog.asksaveasfilename(
+                        defaultextension="hsd",
+                        initialdir="resource/decks")
+                    self.dd.save(file_path, True)
                 elif k == 'o':
-                    #TODO: Prompt for a filename and load
-                    self.dd = DeckDisplay(Deck.from_hsd("resource/decks/test.hsd"))
+                    file_path = tkFileDialog.askopenfilename(
+                        defaultextension="hsd",
+                        initialdir="resource/decks")
+                    self.dd = DeckDisplay(Deck.from_hsd(file_path))
         else:
             if event.key == pg.K_BACKSPACE:
                 #backspace
