@@ -28,7 +28,7 @@ class Deck(dict):
             #we want an empty deck
             cards = dict()
 
-        self._last_added = None
+        self._history = []
         
         self["cards"] = Counter(cards)
         
@@ -38,11 +38,11 @@ class Deck(dict):
     def add_card(self, cardname):
         self["cards"][cardname] += 1
 
-        self._last_added = cardname
+        self._history.append(cardname)
 
     def add_again(self):
-        if self._last_added:
-            self.add_card(self._last_added)
+        if self._history:
+            self.add_card(self._history[-1])
 
     def take_card(self, cardname):
         #TODO: Clean this up. Four references to self["cards"][cardname] is
@@ -54,6 +54,10 @@ class Deck(dict):
 
         if self["cards"][cardname] == 0:
             del self["cards"][cardname]
+
+    def take_last(self):
+        if self._history:
+            self.take_card(self._history.pop())
 
     def save(self, filename, force=False):
         if not force and os.path.exists(filename):

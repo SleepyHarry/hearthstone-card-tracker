@@ -29,7 +29,7 @@ log = HSLog()
 
 bgblue = (27, 30, 37)
 
-dd = DeckDisplay(Deck.from_hsd("resource/decks/first.hsd"))
+dd = DeckDisplay(Deck.from_hsd("resource/decks/test.hsd"))
 
 def done():
     log.close_all()

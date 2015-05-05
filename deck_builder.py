@@ -24,24 +24,16 @@ dd_rect = dd.get_rect(right=width-10, top=10)
 outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
                            width=dd_rect.width+2, height=dd_rect.height+2)
 
-def card_suggestions(partial, collectible=True):
-    """ Returns a list of all cards that partial could refer to.
-        An autocomplete of sorts.
-    """
-
-    cards = all_cards if not collectible else collectible_cards
-
-    return [name for t in cards.keys()
-            for name, cardobj in cards[t].items()
-            if partial.strip().lower() in name.lower()]
-
 class Textbox(pg.Surface):
     """ A blittable object that can be given text to display. """
 
-    def __init__(self, initial_text, size):
+    def __init__(self, initial_text, size, dd):
         super(Textbox, self).__init__(size, pg.SRCALPHA)
 
-        self._text = initial_text
+        self.dd = dd
+        self.text = initial_text
+
+        self.offset = 0
 
         self._update()
 
@@ -52,12 +44,31 @@ class Textbox(pg.Surface):
         w, h = self.get_size()
         self.fill(colors.yellow, (0, h-1, w, 1))
         
-##        if self._text:
-        text = textOutline(fontL, self._text + '_',
+##        if self.text:
+        text = textOutline(fontL, self.text + '_',
                            colors.white, colors.black)
         text_rect = text.get_rect(left=5, centery=self.get_size()[1]/2)
 
         self.blit(text, text_rect)
+
+    @property
+    def suggestions(self):
+        """ Returns a list of all cards that partial could refer to.
+            An autocomplete of sorts.
+        """
+
+        if not self.text:
+            return []
+
+        raw = [name for t in collectible_cards.keys()
+               for name, cardobj in collectible_cards[t].items()
+               if self.text.strip().lower() in name.lower()]
+
+        self.offset = self.offset % len(raw) if raw else 0
+
+        #offset allows cycling
+        return raw[self.offset:] + raw[:self.offset]
+
 
     def handle_keyboard_input(self, event):
         """ event should be a pg.KEYDOWN event """
@@ -66,63 +77,81 @@ class Textbox(pg.Surface):
 
         keymods = pg.key.get_mods()
         shift = bool(keymods & 3)
+        ctrl = bool(keymods & 196)
 
-        if event.key == 8:
-            #backspace
-            self._text = self._text[:-1]
-        elif 96 < event.key <= 96+26:
-            #letters
-            self._text += chr(event.key - shift*32)
-        elif 47 < event.key <= 47+10:
-            #numbers
-            if not shift:
-                self._text += chr(event.key)
-            else:
-                if event.key == 49:
-                    #exclamation mark
-                    self._text += '!'
-        elif event.key == 59:
-            #semi-colon
-            if shift:
-                self._text += ':'
-        elif event.key == 45:
-            #hyphen
-            self._text += '-'
-        elif event.key == 44:
-            #comma
-            self._text += ','
-        elif event.key == 46:
-            #full-stop
-            self._text += '.'
-        elif event.key == 39:
-            #apostrophe
-            self._text += '\''
-        elif event.key == 32:
-            #space
-            self._text += ' '
-        elif event.key == 13:
-            #enter
-            if self._text:
-                suggestions = card_suggestions(self._text)
+        if ctrl:
+            if 96 < event.key <= 96+26:
+                k = chr(event.key)
 
-                if suggestions:
-                    self._text = ''
-                    self._update()
-                    return suggestions[0]
+                if k == 'z':
+                    self.dd.take_last()
+                elif k == 's':
+                    #TODO: Prompt for a savename
+                    self.dd.save("resource/decks/test.hsd", True)
+                elif k == 'o':
+                    #TODO: Prompt for a filename and load
+                    self.dd = DeckDisplay(Deck.from_hsd("resource/decks/test.hsd"))
+        else:
+            if event.key == pg.K_BACKSPACE:
+                #backspace
+                self.text = self.text[:-1]
+            elif 96 < event.key <= 96+26:
+                #letters
+                self.text += chr(event.key - shift*32)
+            elif 47 < event.key <= 47+10:
+                #numbers
+                if not shift:
+                    self.text += chr(event.key)
+                else:
+                    if event.key == 49:
+                        #exclamation mark
+                        self.text += '!'
+            elif event.key == pg.K_SEMICOLON:
+                #semi-colon
+                if shift:
+                    self.text += ':'
+            elif event.key == pg.K_MINUS:
+                #hyphen
+                self.text += '-'
+            elif event.key == pg.K_COMMA:
+                #comma
+                self.text += ','
+            elif event.key == pg.K_PERIOD:
+                #full-stop
+                self.text += '.'
+            elif event.key == pg.K_QUOTE:
+                #apostrophe
+                self.text += '\''
+            elif event.key == pg.K_SPACE:
+                #space
+                self.text += ' '
+            elif event.key in (pg.K_UP, pg.K_DOWN, pg.K_LEFT, pg.K_RIGHT):
+                #arrow key
+                if event.key == pg.K_UP:
+                    self.offset -= 1
+                elif event.key == pg.K_DOWN:
+                    self.offset += 1
+            elif event.key == 13:
+                #enter
+                if self.text:
+                    suggs = self.suggestions
+                    if suggs:
+                        self.text = ''
+                        self._update()
+
+                        self.dd.add_card(suggs[0])
+                else:
+                    self.dd.add_again()
             else:
-                dd.add_again()
-##        else:
-##            print event.key
+                print event.key
 
         self._update()
 
         #TODO:
         #   Enter
 
-tb = Textbox('', (3*width/4, height/16))
+tb = Textbox('', (3*width/4, height/16), dd)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
-
-selected_card = None
 
 def done():
     pg.quit()
@@ -143,22 +172,18 @@ while True:
             if keys[pg.K_ESCAPE]:
                 done()
 
-            selected_card = tb.handle_keyboard_input(event)
+            tb.handle_keyboard_input(event)
 
-    if selected_card:
-        dd.add_card(selected_card)
-        selected_card = None
-
-    suggestions = card_suggestions(tb._text) if tb._text else []
+##    suggestions = card_suggestions(tb.text) if tb.text else []
 
     screen.fill(bgblue)
 
     screen.fill(colors.yellow, outline_rect)
-    screen.blit(dd, dd_rect)
+    screen.blit(tb.dd, dd_rect)
 
     screen.blit(tb, tb_rect)
 
-    for i, suggestion in enumerate(suggestions[:10]):
+    for i, suggestion in enumerate(tb.suggestions[:10]):
         text = textOutline(fontM, suggestion, colors.white, colors.black)
         screen.blit(text, text.get_rect(left=tb_rect.left+5,
                             top=tb_rect.bottom+(i*fontM.get_height())))
