@@ -1,7 +1,8 @@
-import os, sys, time, random, math, string
 import pygame as pg
+import os, sys, time, random, math, string
 
 from ctypes import windll
+import Tkinter, tkFileDialog
 
 from useful import load_image, colors
 from textFuncs import *
@@ -12,6 +13,9 @@ from deck_display import DeckDisplay, Card, all_cards, collectible_cards as card
 
 ## Pygame display stuff
 pg.init()
+
+root = Tkinter.Tk()
+root.withdraw()
 
 CARD_HEIGHT = 42
 size = width, height = 245, CARD_HEIGHT*20
@@ -29,7 +33,24 @@ log = HSLog()
 
 bgblue = (27, 30, 37)
 
-dd = DeckDisplay(Deck.from_hsd("resource/decks/test.hsd"))
+screen.fill(bgblue)
+pg.display.flip()
+
+if len(sys.argv) > 1:
+    #we've been given a filename
+    file_path = sys.argv[1]
+else:
+    #TODO: abstract this into a function, as it's repeated further down
+    file_path = tkFileDialog.askopenfilename(
+        defaultextension="hsd",
+        initialdir="resource/decks")
+
+if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+    dd = DeckDisplay(Deck.from_hsd(file_path))
+else:
+    #we allow this, on the proviso that later on the user loads a .hsd by using
+    #ctrl+O
+    dd = DeckDisplay()
 
 def done():
     log.close_all()
@@ -47,21 +68,23 @@ while True:
             m1, m3, m2 = pg.mouse.get_pressed()
             mX, mY = pg.mouse.get_pos()
 
-            if m1:
-                minions = cards["Minion"].keys()
-                spells = cards["Ability"].keys()
-                weapons = cards["Weapon"].keys()
-
-                dd.add_card(random.choice(minions + spells + weapons))
-
-            if m2:
-                dd.take_card(random.choice(dd.deck["cards"].keys()))
-
         if event.type == pg.KEYDOWN:
             keys = pg.key.get_pressed()
+            keymods = pg.key.get_mods()
+
+            shift = bool(keymods & 3)
+            ctrl = bool(keymods & 196)
 
             if keys[pg.K_ESCAPE]:
                 done()
+
+            if ctrl and event.key == pg.K_o:
+                file_path = tkFileDialog.askopenfilename(
+                    defaultextension="hsd",
+                    initialdir="resource/decks")
+
+                if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+                    dd = DeckDisplay(Deck.from_hsd(file_path))
 
     screen.fill(bgblue)
 

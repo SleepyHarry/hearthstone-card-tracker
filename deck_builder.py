@@ -75,7 +75,7 @@ class Textbox(pg.Surface):
         return raw[self.offset:] + raw[:self.offset]
 
 
-    def handle_keyboard_input(self, event):
+    def handle_keyboard_input(self, key):
         """ event should be a pg.KEYDOWN event """
 
         #this is super ugly - is there a better way? (TODO)
@@ -85,8 +85,8 @@ class Textbox(pg.Surface):
         ctrl = bool(keymods & 196)
 
         if ctrl:
-            if 96 < event.key <= 96+26:
-                k = chr(event.key)
+            if 96 < key <= 96+26:
+                k = chr(key)
 
                 if k == 'z':
                     self.dd.take_last()
@@ -95,53 +95,59 @@ class Textbox(pg.Surface):
                     file_path = tkFileDialog.asksaveasfilename(
                         defaultextension="hsd",
                         initialdir="resource/decks")
-                    self.dd.save(file_path, True)
+
+                    if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+                        self.dd.save(file_path, True)
+                    else:
+                        #TODO: raise a meaningful error
+                        pass
                 elif k == 'o':
                     file_path = tkFileDialog.askopenfilename(
                         defaultextension="hsd",
                         initialdir="resource/decks")
-                    self.dd = DeckDisplay(Deck.from_hsd(file_path))
+                    if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+                        self.dd = DeckDisplay(Deck.from_hsd(file_path))
         else:
-            if event.key == pg.K_BACKSPACE:
+            if key == pg.K_BACKSPACE:
                 #backspace
                 self.text = self.text[:-1]
-            elif 96 < event.key <= 96+26:
+            elif 96 < key <= 96+26:
                 #letters
-                self.text += chr(event.key - shift*32)
-            elif 47 < event.key <= 47+10:
+                self.text += chr(key - shift*32)
+            elif 47 < key <= 47+10:
                 #numbers
                 if not shift:
-                    self.text += chr(event.key)
+                    self.text += chr(key)
                 else:
-                    if event.key == 49:
+                    if key == 49:
                         #exclamation mark
                         self.text += '!'
-            elif event.key == pg.K_SEMICOLON:
+            elif key == pg.K_SEMICOLON:
                 #semi-colon
                 if shift:
                     self.text += ':'
-            elif event.key == pg.K_MINUS:
+            elif key == pg.K_MINUS:
                 #hyphen
                 self.text += '-'
-            elif event.key == pg.K_COMMA:
+            elif key == pg.K_COMMA:
                 #comma
                 self.text += ','
-            elif event.key == pg.K_PERIOD:
+            elif key == pg.K_PERIOD:
                 #full-stop
                 self.text += '.'
-            elif event.key == pg.K_QUOTE:
+            elif key == pg.K_QUOTE:
                 #apostrophe
                 self.text += '\''
-            elif event.key == pg.K_SPACE:
+            elif key == pg.K_SPACE:
                 #space
                 self.text += ' '
-            elif event.key in (pg.K_UP, pg.K_DOWN, pg.K_LEFT, pg.K_RIGHT):
+            elif key in (pg.K_UP, pg.K_DOWN, pg.K_LEFT, pg.K_RIGHT):
                 #arrow key
-                if event.key == pg.K_UP:
+                if key == pg.K_UP:
                     self.offset -= 1
-                elif event.key == pg.K_DOWN:
+                elif key == pg.K_DOWN:
                     self.offset += 1
-            elif event.key == 13:
+            elif key == 13:
                 #enter
                 if self.text:
                     suggs = self.suggestions
@@ -152,13 +158,10 @@ class Textbox(pg.Surface):
                         self.dd.add_card(suggs[0])
                 else:
                     self.dd.add_again()
-            else:
-                print event.key
+##            else:
+##                print key
 
         self._update()
-
-        #TODO:
-        #   Enter
 
 tb = Textbox('', (3*width/4, height/16), dd)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
@@ -182,7 +185,7 @@ while True:
             if keys[pg.K_ESCAPE]:
                 done()
 
-            tb.handle_keyboard_input(event)
+            tb.handle_keyboard_input(event.key)
 
 ##    suggestions = card_suggestions(tb.text) if tb.text else []
 
