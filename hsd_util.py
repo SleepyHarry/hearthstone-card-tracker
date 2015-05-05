@@ -27,6 +27,8 @@ class Deck(dict):
         if cards is None:
             #we want an empty deck
             cards = dict()
+
+        self._last_added = None
         
         self["cards"] = Counter(cards)
         
@@ -35,6 +37,12 @@ class Deck(dict):
 
     def add_card(self, cardname):
         self["cards"][cardname] += 1
+
+        self._last_added = cardname
+
+    def add_again(self):
+        if self._last_added:
+            self.add_card(self._last_added)
 
     def take_card(self, cardname):
         #TODO: Clean this up. Four references to self["cards"][cardname] is
