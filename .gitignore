@@ -108,3 +108,5 @@ $RECYCLE.BIN/
 *.hsd
 temp
 legacy/
+hsd.ico
+*.bat
