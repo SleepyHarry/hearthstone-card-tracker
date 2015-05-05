@@ -37,7 +37,7 @@ def get_card(cardname, collectible=True):
         except KeyError:
             pass
 
-    raise NoSuchCard("Cannot find " + cardname)
+    raise NoSuchCard("Cannot find {}".format(cardname))
 
 class DeckDisplay(pg.Surface):
     _card_slot_images = {}
@@ -54,9 +54,31 @@ class DeckDisplay(pg.Surface):
         else:
             self.deck = deck
 
+        for k, v in vars(self.deck.__class__).items():
+            #only get normal methods, not privates or dunders
+            #also (deliberately) ignores classmethods
+            if not k.startswith('_') and type(v) == type(lambda:None):
+                setattr(self, k, self._deck_func(v))
+
         self.fill(bgblue)
 
         self.show_cards()
+
+    def _deck_func(self, func):
+        """ Meant to be applied to functions from hsd_util.Deck
+
+            All this does is call the function for the underlying Deck
+            object of dd (a DeckDisplay object), then call dd's
+            show_cards method (which updates the display)
+        """
+
+        def f(*args, **kwargs):
+            #func is unbound
+            func(self.deck, *args, **kwargs)
+
+            self.show_cards()
+
+        return f
 
     @classmethod
     def load_images(cls):
@@ -83,9 +105,12 @@ class DeckDisplay(pg.Surface):
 
     @classmethod
     def get_card_slot_image(cls, cardname):
-        #makes (or gets a premade) card slot image, WITHOUT quantity info
+        """makes (or gets a premade) card slot image, WITHOUT quantity info"""
+        
         if cardname in cls._card_slot_images:
             return cls._card_slot_images[cardname]
+
+##        print cardname
 
         fullcard = get_card(cardname)
 
@@ -105,11 +130,11 @@ class DeckDisplay(pg.Surface):
     def show_cards(self):
         #clear
         self.fill(bgblue)
-        
-        #draw the cards we have onto ourselves
+
         deck = sorted(self.deck["cards"].items(),
                       key=lambda x: int(get_card(x[0]).cost))
-        
+
+        #draw the cards we have onto ourselves
         for i, (card, quantity) in enumerate(deck):
             #copy so that we can add quantity without affecting the base
             card_img = self.get_card_slot_image(card).copy()
@@ -118,14 +143,3 @@ class DeckDisplay(pg.Surface):
             card_img.blit(q, q.get_rect(center=(width-18, 21)))
 
             self.blit(card_img, (0, CARD_HEIGHT*i))
-
-    #interface directly with the deck
-    def add_card(self, cardname):
-        self.deck.add_card(cardname)
-
-        self.show_cards()
-
-    def take_card(self, cardname):
-        self.deck.take_card(cardname)
-
-        self.show_cards()

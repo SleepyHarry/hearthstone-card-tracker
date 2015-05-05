@@ -8,7 +8,7 @@ from textFuncs import *
 
 from hscheck import HSLog
 from hsd_util import Deck
-from deck_display import DeckDisplay, Card, cards
+from deck_display import DeckDisplay, Card, all_cards, collectible_cards as cards
 
 ## Pygame display stuff
 pg.init()
