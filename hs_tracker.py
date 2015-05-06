@@ -11,6 +11,8 @@ from hscheck import HSLog
 from hsd_util import Deck
 from deck_display import DeckDisplay, Card, all_cards, collectible_cards as cards
 
+sys.stderr = open("error.log", 'w')
+
 ## Pygame display stuff
 pg.init()
 
@@ -85,6 +87,26 @@ while True:
 
                 if file_path and os.path.splitext(file_path)[-1] == ".hsd":
                     dd = DeckDisplay(Deck.from_hsd(file_path))
+
+    #get live info
+    result, drawn_dict = log.result, log.drawn
+
+    if result:
+        dd.reset()
+
+    #TODO: Error handling (wrong deck etc.)
+    if any(drawn_dict.values()):
+        #mulligans
+        for card in drawn_dict['m']:
+            dd.add_card(card)
+
+            #these cards have previously been drawn, so we need to make
+            #sure that the deck doesn't remember them twice
+            #TODO: make this look better, there's a reason it's got an _
+            dd.deck._reset_additions.remove(card)
+
+        for card in drawn_dict['d']:
+            dd.take_card(card, remember=True)
 
     screen.fill(bgblue)
 

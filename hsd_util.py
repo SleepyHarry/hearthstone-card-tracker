@@ -29,6 +29,7 @@ class Deck(dict):
             cards = dict()
 
         self._history = []
+        self._reset_additions = []
         
         self["cards"] = Counter(cards)
         
@@ -44,20 +45,41 @@ class Deck(dict):
         if self._history:
             self.add_card(self._history[-1])
 
-    def take_card(self, cardname):
+    def take_card(self, cardname, remember=False):
+        """ Takes a card (specified by cardname) out of the deck.
+            if remember is True, make a note of it so that when we
+            call reset, we replace every card we took out (and remembered)
+        """
+        
         #TODO: Clean this up. Four references to self["cards"][cardname] is
         #      silly
-        if self["cards"][cardname] <= 0:
-            raise CardNotInDeckError()
+        if cardname == "The Coin":
+            return
+        elif self["cards"][cardname] <= 0:
+            raise CardNotInDeckError(cardname)
 
         self["cards"][cardname] -= 1
 
         if self["cards"][cardname] == 0:
             del self["cards"][cardname]
 
+        if remember:
+            self._reset_additions.append(cardname)
+
     def take_last(self):
         if self._history:
             self.take_card(self._history.pop())
+
+    def clear(self):
+        self["cards"] = Counter()
+        self["hero"] = ''
+        self["fmt"] = ''
+
+    def reset(self):
+        """ Replace every card we took out and remembered """
+
+        while self._reset_additions:
+            self.add_card(self._reset_additions.pop())
 
     def save(self, filename, force=False):
         if not force and os.path.exists(filename):

@@ -3,11 +3,17 @@ import re
 
 class HSLog():
     #does this really need to be a class? Can't all this just be top level?
-    
-    reg = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY DECK.*\n')
-    mul = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY HAND -> FRIENDLY DECK.*\n')
-    gvgdraw = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from  -> FRIENDLY HAND.*\n')
 
+    #normal draws
+    reg = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY DECK.*\n')
+    
+    #initial draws
+    gvgdraw = re.compile(r'\n\[Zone].*? id=1 .*name=(.*) id=.* zone from  -> FRIENDLY HAND.*\n')
+
+    #cards returned during mulligan
+    mul = re.compile(r'\n\[Zone].*name=(.*) id=.* zone from FRIENDLY HAND -> FRIENDLY DECK.*\n')
+
+    #game result
     end = re.compile(r'\n\[Asset].*name=([a-z]+)_screen.*\n')
 
     f_path = r'C:\Program Files (x86)\Hearthstone\Hearthstone_Data\output_log.txt'
@@ -25,8 +31,6 @@ class HSLog():
 
     @property
     def drawn(self):
-        #TODO: Chromaggus bug
-        
         x = self.f.read()
         
         c = self.reg.findall(x)

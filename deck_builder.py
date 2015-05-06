@@ -90,6 +90,8 @@ class Textbox(pg.Surface):
 
                 if k == 'z':
                     self.dd.take_last()
+                elif k == 'r':
+                    self.dd.clear()
                 elif k == 's':
                     #TODO: refocus main window
                     file_path = tkFileDialog.asksaveasfilename(
