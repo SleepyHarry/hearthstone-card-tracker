@@ -81,6 +81,9 @@ class Deck(dict):
         while self._reset_additions:
             self.add_card(self._reset_additions.pop())
 
+    def __len__(self):
+        return sum(self["cards"].values())
+
     def save(self, filename, force=False):
         if not force and os.path.exists(filename):
             #attempting to overwrite

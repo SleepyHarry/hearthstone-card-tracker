@@ -7,14 +7,11 @@ from textFuncs import *
 
 from hsd_util import Deck
 
-CARD_HEIGHT = 42
-size = width, height = 245, CARD_HEIGHT*20
-
 bgblue = (27, 30, 37)
 
 all_cards = json.load(open("resource/cards.json"))["cards"]
 
-#This is not perfect. For example, "Misha" and "Devilsaur" are in here
+#This is not perfect. For example, "Misha" and "Devilsaur" were in here
 collectible_cards = {t: {name: card for name, card in all_cards[t].items()
                          if card["rarity"] != u'0'}
                      for t in ["Minion", "Weapon", "Ability"]}
@@ -41,8 +38,14 @@ def get_card(cardname, collectible=True):
 
 class DeckDisplay(pg.Surface):
     _card_slot_images = {}
+
+    CARD_HEIGHT = 42
+    width = 245
+    height_in_cards = 24.5
     
-    def __init__(self, deck=None):
+    def __init__(self, deck=None, height_in_cards=None):
+        size = (self.width,
+                (height_in_cards or self.height_in_cards)*self.CARD_HEIGHT)
         super(DeckDisplay, self).__init__(size)
 
         #this won't work if a pygame display isn't initialised (TODO)
@@ -140,6 +143,6 @@ class DeckDisplay(pg.Surface):
             card_img = self.get_card_slot_image(card).copy()
 
             q = self.numbers["yellow"][quantity]
-            card_img.blit(q, q.get_rect(center=(width-18, 21)))
+            card_img.blit(q, q.get_rect(center=(self.width-18, 21)))
 
-            self.blit(card_img, (0, CARD_HEIGHT*i))
+            self.blit(card_img, (0, self.CARD_HEIGHT*i))

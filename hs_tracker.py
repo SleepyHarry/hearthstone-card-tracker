@@ -12,6 +12,7 @@ from hsd_util import Deck
 from deck_display import DeckDisplay, Card, all_cards, collectible_cards as cards
 
 sys.stderr = open("error.log", 'w')
+_error = False
 
 ## Pygame display stuff
 pg.init()
@@ -20,7 +21,7 @@ root = Tkinter.Tk()
 root.withdraw()
 
 CARD_HEIGHT = 42
-size = width, height = 245, CARD_HEIGHT*20
+size = width, height = 245, int(CARD_HEIGHT*24.5)
 fps_tgt = 30
 clock = pg.time.Clock()
 
@@ -96,6 +97,9 @@ while True:
 
     #TODO: Error handling (wrong deck etc.)
     if any(drawn_dict.values()):
+        for card in drawn_dict['d']:
+            dd.take_card(card, remember=True)
+        
         #mulligans
         for card in drawn_dict['m']:
             dd.add_card(card)
@@ -103,14 +107,20 @@ while True:
             #these cards have previously been drawn, so we need to make
             #sure that the deck doesn't remember them twice
             #TODO: make this look better, there's a reason it's got an _
-            dd.deck._reset_additions.remove(card)
-
-        for card in drawn_dict['d']:
-            dd.take_card(card, remember=True)
+            try:
+                #This threw a ValueError once, but due to a lack of
+                #descriptive errors, I have no idea what caused it.
+                dd.deck._reset_additions.remove(card)
+            except ValueError as e:
+                print >> sys.stderr, e.message, card
+                _error = True
 
     screen.fill(bgblue)
 
     screen.blit(dd, (0, 0))
+
+    if _error:
+        screen.fill(colors.red, (width/4, height-10, width/2, 10))
     
     pg.display.flip()
 

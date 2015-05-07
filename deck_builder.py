@@ -1,5 +1,5 @@
 import pygame as pg
-import os, sys, time, random, math
+import os, sys, time, random, math, re
 
 import Tkinter, tkFileDialog
 
@@ -21,13 +21,6 @@ clock = pg.time.Clock()
 bgblue = (27, 30, 37)
 
 screen = pg.display.set_mode(size)
-
-dd = DeckDisplay()
-dd_rect = dd.get_rect(right=width-10, top=10)
-
-#yellow outline
-outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
-                           width=dd_rect.width+2, height=dd_rect.height+2)
 
 class Textbox(pg.Surface):
     """ A blittable object that can be given text to display. """
@@ -74,6 +67,21 @@ class Textbox(pg.Surface):
         #offset allows cycling
         return raw[self.offset:] + raw[:self.offset]
 
+    @staticmethod
+    def filename_format(file_path):
+        """ Replaces certain tokens in file_path with appropriate things """
+
+        file_path = re.sub(r"(?<!%)%DATE%",
+                           time.strftime("%Y-%m-%d", time.localtime()),
+                           file_path)
+
+        file_path = re.sub(r"(?<!%)%TIME%",
+                           time.strftime("%H%M", time.localtime()),
+                           file_path)
+
+        file_path = file_path.replace("%%", '%')
+
+        return file_path
 
     def handle_keyboard_input(self, key):
         """ event should be a pg.KEYDOWN event """
@@ -97,6 +105,8 @@ class Textbox(pg.Surface):
                     file_path = tkFileDialog.asksaveasfilename(
                         defaultextension="hsd",
                         initialdir="resource/decks")
+
+                    file_path = self.filename_format(file_path)
 
                     if file_path and os.path.splitext(file_path)[-1] == ".hsd":
                         self.dd.save(file_path, True)
@@ -165,6 +175,13 @@ class Textbox(pg.Surface):
 
         self._update()
 
+dd = DeckDisplay(height_in_cards=20)
+dd_rect = dd.get_rect(right=width-10, top=10)
+
+#yellow outline
+outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
+                           width=dd_rect.width+2, height=dd_rect.height+2)
+
 tb = Textbox('', (3*width/4, height/16), dd)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
 
@@ -196,10 +213,18 @@ while True:
     screen.fill(colors.yellow, outline_rect)
     screen.blit(tb.dd, dd_rect)
 
+    cards_in_deck_text = textOutline(fontM, "{}/30".format(len(tb.dd.deck)),
+                                     colors.white, colors.black)
+    screen.blit(cards_in_deck_text,
+                cards_in_deck_text.get_rect(top=dd_rect.bottom + 10,
+                                            right=dd_rect.right - 5))
+
     screen.blit(tb, tb_rect)
 
     for i, suggestion in enumerate(tb.suggestions[:10]):
-        text = textOutline(fontM, suggestion, colors.white, colors.black)
+        text = textOutline(fontM, suggestion,
+                           colors.white if i else colors.cyan,
+                           colors.black)
         screen.blit(text, text.get_rect(left=tb_rect.left+5,
                             top=tb_rect.bottom+(i*fontM.get_height())))
     
