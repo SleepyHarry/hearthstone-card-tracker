@@ -85,6 +85,9 @@ while True:
             if keys[pg.K_ESCAPE]:
                 done()
 
+            if keys[pg.K_x]:
+                _error = False
+
             if ctrl and event.key == pg.K_o:
                 file_path = tkFileDialog.askopenfilename(
                     defaultextension="hsd",
