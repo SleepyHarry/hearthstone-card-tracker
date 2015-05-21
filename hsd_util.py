@@ -79,7 +79,7 @@ class Deck(dict):
     def clear(self):
         self["cards"] = Counter()
         self["hero"] = ''
-        self["fmt"] = ''
+        self["format"] = ''
 
         self._history = []
         self._reset_additions = []
@@ -93,6 +93,11 @@ class Deck(dict):
     def __len__(self):
         return sum(self["cards"].values())
 
+    def replace(self, new_deck):
+        """ Given a Deck-like object new_deck, make us like it IN PLACE """
+        self.clear()
+        self.update(new_deck)
+
     def save(self, filename, force=False):
         if not force and os.path.exists(filename):
             #attempting to overwrite
@@ -101,7 +106,7 @@ class Deck(dict):
                                     .format(os.path.abspath(filename)))
 
         #should we be catching OSErrors here?
-        pickle.dump(self, open(filename, 'w'))
+        pickle.dump(dict(self), open(filename, 'w'))
 
     to_hsd = save    #this seems like a good idea
     
@@ -111,4 +116,9 @@ class Deck(dict):
             raise NoSuchDeckExists("Cannot find deck at {}"
                                    .format(os.path.abspath(filename)))
 
-        return pickle.load(open(filename))
+        new_deck = cls()
+        old_deck = pickle.load(open(filename))
+
+        new_deck.replace(old_deck)
+
+        return new_deck

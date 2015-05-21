@@ -87,6 +87,11 @@ class ObservableDeck(Deck):
 
         return inner
 
+    def replace(self, new_deck):
+        super(ObservableDeck, self).replace(new_deck)
+
+        self.notify_observers()
+
 
 class DeckObserver(pg.Surface):
     size = width, height = 0, 0

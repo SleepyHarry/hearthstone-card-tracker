@@ -123,13 +123,7 @@ class Textbox(pg.Surface):
                         initialdir="resource/decks")
                     if file_path and os.path.splitext(file_path)[-1] == ".hsd":
                         #swap decks in place so that observers are preserved
-                        self.deck.clear()
-
-                        new_deck = ObservableDeck.from_hsd(file_path)
-
-                        #this is a dict.update
-                        self.deck.update(new_deck)
-                        self.deck.notify_observers()
+                        self.deck.replace(ObservableDeck.from_hsd(file_path))
         else:
             if key == pg.K_BACKSPACE:
                 #backspace
