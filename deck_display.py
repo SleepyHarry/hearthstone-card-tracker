@@ -251,7 +251,24 @@ class ManaCurve(DeckObserver):
 
             cost_breakdown[min(int(cost), 7)] += v
 
+        if cost_breakdown:
+            highest = max(cost_breakdown.values())
+            modifier = 1 if not highest > 4 else 4./highest
+
         for k, v in cost_breakdown.items():
             #TODO: bars
-            self.blit(self.numbers["yellow"][v],
-                      (int((k + .5) * self.width / 8), self.height / 2))
+            width = 30
+            height = int(50 * v * modifier)
+            left = int((k + .5) * self.width / 8 - width/2.)
+            top = self.height - 40 - height
+
+            bar_rect = pg.Rect(left, top, width, height)
+            bar_inner_rect = pg.Rect(bar_rect.left + 1,
+                                     bar_rect.top + 1,
+                                     bar_rect.width - 2,
+                                     bar_rect.height - 2)
+
+            self.fill((128, 128, 0), bar_rect)
+            self.fill(colors.yellow, bar_inner_rect)
+            # self.blit(self.numbers["yellow"][v],
+            #           (int((k + .5) * self.width / 8), self.height / 2))
