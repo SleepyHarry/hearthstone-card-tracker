@@ -8,7 +8,7 @@ from useful import load_image, colors
 from textFuncs import *
 
 from hscheck import HSLog
-from hsd_util import Deck
+from hsd_util import Deck, CardNotInDeckError
 from deck_display import DeckDisplay, Card, all_cards, collectible_cards as cards
 
 sys.stderr = open("error.log", 'w')
@@ -94,11 +94,20 @@ while True:
 
     if result:
         dd.reset()
-
-    #TODO: Error handling (wrong deck etc.)
-    if any(drawn_dict.values()):
+    elif any(drawn_dict.values()):
+        #TODO: Error handling (wrong deck etc.)
         for card in drawn_dict['d']:
-            dd.take_card(card, remember=True)
+            try:
+                dd.take_card(card, remember=True)
+            except CardNotInDeckError as e:
+                #Burrowing Mine triggers this, so there are genuine
+                #reasons for it to happen in normal play
+
+                #Also, secrets trigger twice, which is a bug that should be
+                #fixed in hsd_util.py
+                print >> sys.stderr, "Card not in deck: ", e.message
+                sys.stderr.flush()
+                _error = True
         
         #mulligans
         for card in drawn_dict['m']:
@@ -112,7 +121,9 @@ while True:
                 #descriptive errors, I have no idea what caused it.
                 dd.deck._reset_additions.remove(card)
             except ValueError as e:
+                #TODO: use logging module
                 print >> sys.stderr, e.message, card
+                sys.stderr.flush()
                 _error = True
 
     screen.fill(bgblue)

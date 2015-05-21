@@ -7,7 +7,7 @@ from useful import load_image, colors
 from textFuncs import *
 
 from hsd_util import Deck
-from deck_display import DeckDisplay, all_cards, collectible_cards, get_card
+from deck_display import DeckDisplay, ManaCurve, collectible_cards
 
 pg.init()
 
@@ -79,6 +79,8 @@ class Textbox(pg.Surface):
                            time.strftime("%H%M", time.localtime()),
                            file_path)
 
+        #TODO: %HERO%
+
         file_path = file_path.replace("%%", '%')
 
         return file_path
@@ -118,7 +120,8 @@ class Textbox(pg.Surface):
                         defaultextension="hsd",
                         initialdir="resource/decks")
                     if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                        self.dd = DeckDisplay(Deck.from_hsd(file_path))
+                        self.dd = DeckDisplay(Deck.from_hsd(file_path),
+                                              height=20)
         else:
             if key == pg.K_BACKSPACE:
                 #backspace

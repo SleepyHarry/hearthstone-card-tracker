@@ -56,7 +56,7 @@ class Deck(dict):
         if cardname == "The Coin":
             return
         elif self["cards"][cardname] <= 0:
-            raise CardNotInDeckError(cardname)
+            raise CardNotInDeckError('"{}"'.format(cardname))
 
         self["cards"][cardname] -= 1
 
@@ -102,8 +102,10 @@ class Deck(dict):
             raise NoSuchDeckExists("Cannot find deck at {}"
                                    .format(os.path.abspath(filename)))
 
-        deck_dict = pickle.load(open(filename))
-        
-        return cls(deck_dict["cards"],
-                   deck_dict["hero"],
-                   deck_dict["format"])
+        return pickle.load(open(filename))
+
+        # deck_dict = pickle.load(open(filename))
+
+        # return cls(deck_dict["cards"],
+        #            deck_dict["hero"],
+        #            deck_dict["format"])

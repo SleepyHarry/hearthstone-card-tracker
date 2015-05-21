@@ -110,3 +110,7 @@ temp
 legacy/
 hsd.ico
 *.bat
+*.png
+
+#PyCharm
+.idea/

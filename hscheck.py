@@ -1,6 +1,8 @@
 import time
 import re
 
+#TODO: Secrets get apparently drawn twice
+
 class HSLog():
     #does this really need to be a class? Can't all this just be top level?
 
