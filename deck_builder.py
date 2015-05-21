@@ -7,7 +7,9 @@ from useful import load_image, colors
 from textFuncs import *
 
 from hsd_util import Deck
-from deck_display import DeckDisplay, ManaCurve, collectible_cards
+from deck_display import DeckDisplay, ManaCurve, ObservableDeck,\
+                         collectible_cards
+
 
 pg.init()
 
@@ -25,10 +27,10 @@ screen = pg.display.set_mode(size)
 class Textbox(pg.Surface):
     """ A blittable object that can be given text to display. """
 
-    def __init__(self, initial_text, size, dd):
+    def __init__(self, initial_text, size, deck):
         super(Textbox, self).__init__(size, pg.SRCALPHA)
 
-        self.dd = dd
+        self.deck = deck
         self.text = initial_text
 
         self.offset = 0
@@ -88,7 +90,7 @@ class Textbox(pg.Surface):
     def handle_keyboard_input(self, key):
         """ event should be a pg.KEYDOWN event """
 
-        #this is super ugly - is there a better way? (TODO)
+        #TODO: this is super ugly - is there a better way?
 
         keymods = pg.key.get_mods()
         shift = bool(keymods & 3)
@@ -99,9 +101,9 @@ class Textbox(pg.Surface):
                 k = chr(key)
 
                 if k == 'z':
-                    self.dd.take_last()
+                    self.deck.take_last()
                 elif k == 'r':
-                    self.dd.clear()
+                    self.deck.clear()
                 elif k == 's':
                     #TODO: refocus main window
                     file_path = tkFileDialog.asksaveasfilename(
@@ -111,7 +113,7 @@ class Textbox(pg.Surface):
                     file_path = self.filename_format(file_path)
 
                     if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                        self.dd.save(file_path, True)
+                        self.deck.save(file_path, True)
                     else:
                         #TODO: raise a meaningful error
                         pass
@@ -120,8 +122,14 @@ class Textbox(pg.Surface):
                         defaultextension="hsd",
                         initialdir="resource/decks")
                     if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                        self.dd = DeckDisplay(Deck.from_hsd(file_path),
-                                              height=20)
+                        #swap decks in place so that observers are preserved
+                        self.deck.clear()
+
+                        new_deck = ObservableDeck.from_hsd(file_path)
+
+                        #this is a dict.update
+                        self.deck.update(new_deck)
+                        self.deck.notify_observers()
         else:
             if key == pg.K_BACKSPACE:
                 #backspace
@@ -170,22 +178,27 @@ class Textbox(pg.Surface):
                         self.text = ''
                         self._update()
 
-                        self.dd.add_card(suggs[0])
+                        self.deck.add_card(suggs[0])
                 else:
-                    self.dd.add_again()
+                    self.deck.add_again()
 ##            else:
 ##                print key
 
         self._update()
 
-dd = DeckDisplay(height_in_cards=20)
+deck = ObservableDeck()
+
+dd = DeckDisplay(deck, height_in_cards=20)
 dd_rect = dd.get_rect(right=width-10, top=10)
 
 #yellow outline
 outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
                            width=dd_rect.width+2, height=dd_rect.height+2)
 
-tb = Textbox('', (3*width/4, height/16), dd)
+mc = ManaCurve(deck)
+mc_rect = mc.get_rect(centerx=width/2, top=100)
+
+tb = Textbox('', (3*width/4, height/16), deck)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
 
 def done():
@@ -209,20 +222,20 @@ while True:
 
             tb.handle_keyboard_input(event.key)
 
-##    suggestions = card_suggestions(tb.text) if tb.text else []
-
     screen.fill(bgblue)
 
     screen.fill(colors.yellow, outline_rect)
-    screen.blit(tb.dd, dd_rect)
+    screen.blit(dd, dd_rect)
 
-    cards_in_deck_text = textOutline(fontM, "{}/30".format(len(tb.dd.deck)),
+    cards_in_deck_text = textOutline(fontM, "{}/30".format(len(deck)),
                                      colors.white, colors.black)
     screen.blit(cards_in_deck_text,
                 cards_in_deck_text.get_rect(top=dd_rect.bottom + 10,
                                             right=dd_rect.right - 5))
 
     screen.blit(tb, tb_rect)
+
+    screen.blit(mc, mc_rect)
 
     for i, suggestion in enumerate(tb.suggestions[:10]):
         text = textOutline(fontM, suggestion,

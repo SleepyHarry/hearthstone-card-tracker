@@ -2,6 +2,8 @@ import pygame as pg
 
 import json
 
+from collections import Counter
+
 from useful import load_image, colors
 from textFuncs import *
 
@@ -39,54 +41,79 @@ def get_card(cardname, collectible=True):
     raise NoSuchCard("Cannot find {}".format(cardname))
 
 
-class DeckContainer(pg.Surface):
-    size = width, height = 0, 0
+class ObservableDeck(Deck):
+    """ Same as Deck, except it knows everything observing it, and notifies
+        them when something happens.
+    """
 
-    def __init__(self, deck=None):
-        super(DeckContainer, self).__init__(self.size)
+    def __init__(self, cards=None, hero='', fmt='',
+                 observers=None):
+        """ obsevers should be an iterable if not None
+        """
+        super(ObservableDeck, self).__init__(cards, hero, fmt)
 
-        #this won't work if a pygame display isn't initialised (TODO)
-        self._load_images()
+        self.observers = observers or []
 
-        if deck is None:
-            #we want an empty deck
-            self.deck = Deck()
-        else:
-            self.deck = deck
-
-        for k, v in vars(self.deck.__class__).items():
+        for k, v in vars(Deck).items():
             #only get normal methods, not privates or dunders
             #also (deliberately) ignores classmethods
             if not k.startswith('_') and type(v) == type(lambda: None):
                 setattr(self, k, self._deck_func(v))
 
-        #TODO: should this be in the generic container?
-        self.fill(bgblue)
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def notify_observers(self):
+        for observer in self.observers:
+            observer.update()
 
     def _deck_func(self, func):
         """ Meant to be applied to functions from hsd_util.Deck
 
-            This is used to enable interfacing directly with a
-            DeckContainer's underlying deck, possible intercepting
-            fucntionality. For example, DeckDisplay will want to update
-            itself (DeckDisplay.show_cards()) whenever something happens
-            to the underlying deck.
+            This is used to enable interfacing directly with a DeckObserver's
+            underlying deck, possibly intercepting functionality if
+            overridden.
 
-            DeckContainer._deck_func is simply a skeleton of this concept,
-            in order to use it, override in subclasses and edit the inner
-            function.
+            DeckObserver._deck_func is simply a skeleton of this concept,
+            intercepting only to call the (possibly not overidden)
+            self.update method.
         """
 
         def inner(*args, **kwargs):
             #func is unbound
-            func(self.deck, *args, **kwargs)
+            func(self, *args, **kwargs)
+
+            self.notify_observers()
 
         return inner
 
+
+class DeckObserver(pg.Surface):
+    size = width, height = 0, 0
+
+    def __init__(self, deck=None):
+        super(DeckObserver, self).__init__(self.size)
+
+        #this won't work if a pygame display isn't initialised (TODO)
+        self._load_images()
+        self._load_extra_images()
+
+        if deck is None:
+            #we want an empty deck
+            self.deck = ObservableDeck()
+        else:
+            self.deck = deck
+
+        self.deck.add_observer(self)
+
+        self.update()
+
+    def update(self):
+        #TODO: should this be in the generic container?
+        self.fill(bgblue)
+
     @classmethod
     def _load_images(cls):
-        #TODO: make this extensible in subclasses?
-
         #check to see if we've done this before
         if "fontM" in cls.__dict__:
             return
@@ -98,8 +125,6 @@ class DeckContainer(pg.Surface):
             cls.fontM = pg.font.SysFont("arial", 24, bold=True)
             cls.fontS = pg.font.SysFont("arial", 20, bold=True)
 
-        cls.slot_blank = load_image("resource/slot_blank.png")
-
         #Numbers
         cls.numbers = {
             k: [textOutline(cls.fontM, str(i),
@@ -107,6 +132,14 @@ class DeckContainer(pg.Surface):
                 for i in range(100)]
             for k in ("yellow", "white")
             }
+
+    @classmethod
+    def _load_extra_images(cls):
+        """ Load images specific to this container
+        """
+
+        #No extras in the base class, obviously
+        pass
 
     @classmethod
     def _get_card_slot_image(cls, cardname):
@@ -132,7 +165,8 @@ class DeckContainer(pg.Surface):
 
         return surface
 
-class DeckDisplay(DeckContainer):
+
+class DeckDisplay(DeckObserver):
     _card_slot_images = {}
 
     CARD_HEIGHT = 42
@@ -140,22 +174,21 @@ class DeckDisplay(DeckContainer):
     height_in_cards = 24.5
 
     def __init__(self, deck=None, height_in_cards=None):
-        self.size = (self.width,
-                (height_in_cards or self.height_in_cards) * self.CARD_HEIGHT)
+        self.size = (
+            self.width,
+            (height_in_cards or self.height_in_cards) * self.CARD_HEIGHT
+        )
         super(DeckDisplay, self).__init__(deck)
 
-        self.show_cards()
+        self.update()
 
-    def _deck_func(self, func):
-        def inner(*args, **kwargs):
-            #func is unbound
-            func(self.deck, *args, **kwargs)
+    @classmethod
+    def _load_extra_images(cls):
+        """ Load images specific to this observer
+        """
+        cls.slot_blank = load_image("resource/slot_blank.png")
 
-            self.show_cards()
-
-        return inner
-
-    def show_cards(self):
+    def update(self):
         #clear
         self.fill(bgblue)
 
@@ -173,5 +206,52 @@ class DeckDisplay(DeckContainer):
             self.blit(card_img, (0, self.CARD_HEIGHT * i))
 
 
-class ManaCurve(DeckContainer):
-    size = width, height = 400, 300  #TODO: finalise these
+class ManaCurve(DeckObserver):
+    size = width, height = 320, 280  #TODO: finalise these
+
+    def __init__(self, deck=None):
+        super(ManaCurve, self).__init__(deck)
+
+        self._draw_static_canvas()
+
+    @classmethod
+    def _load_extra_images(cls):
+        """ Load images specific to this container
+        """
+        cls.mana_gem = load_image("resource/mana_gem.png",
+                                  colorkey=colors.magenta)
+
+        cls.numbers["7+"] = textOutline(cls.fontM, "7+",
+                                        colors.white, colors.black)
+
+    def _draw_static_canvas(self):
+        """ Draw the base of the ManaCurve, which is always present """
+        self.fill(colors.yellow)
+        self.fill(bgblue, (1, 1, self.width - 2, self.height - 2))
+
+        for i in xrange(8):
+            center = (int((i + .5) * self.width / 8), self.height - 20)
+            self.blit(self.mana_gem,
+                      self.mana_gem.get_rect(center=center))
+
+            if i != 7:
+                num = self.numbers["white"][i]
+            else:
+                num = self.numbers["7+"]
+
+            self.blit(num, num.get_rect(center=center))
+
+    def update(self):
+        self.fill(bgblue, (1, 1, self.width - 2, self.height - 37))
+
+        cost_breakdown = Counter()
+
+        for k, v in self.deck["cards"].items():
+            cost = get_card(k).cost
+
+            cost_breakdown[min(int(cost), 7)] += v
+
+        for k, v in cost_breakdown.items():
+            #TODO: bars
+            self.blit(self.numbers["yellow"][v],
+                      (int((k + .5) * self.width / 8), self.height / 2))

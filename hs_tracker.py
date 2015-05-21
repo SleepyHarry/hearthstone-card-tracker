@@ -39,6 +39,8 @@ bgblue = (27, 30, 37)
 screen.fill(bgblue)
 pg.display.flip()
 
+#TODO: ObservableDeck changes
+
 if len(sys.argv) > 1:
     #we've been given a filename
     file_path = sys.argv[1]

@@ -36,6 +36,12 @@ class Deck(dict):
         self["hero"] = hero
         self["format"] = fmt
 
+    def __repr__(self):
+        return ("{}(".format(self.__class__.__name__) +
+                ", ".join("{}={}".format(k, repr(v)) for k, v in
+                                  self.items()) +
+                ")")
+
     def add_card(self, cardname):
         self["cards"][cardname] += 1
 
@@ -75,6 +81,9 @@ class Deck(dict):
         self["hero"] = ''
         self["fmt"] = ''
 
+        self._history = []
+        self._reset_additions = []
+
     def reset(self):
         """ Replace every card we took out and remembered """
 
@@ -103,9 +112,3 @@ class Deck(dict):
                                    .format(os.path.abspath(filename)))
 
         return pickle.load(open(filename))
-
-        # deck_dict = pickle.load(open(filename))
-
-        # return cls(deck_dict["cards"],
-        #            deck_dict["hero"],
-        #            deck_dict["format"])
