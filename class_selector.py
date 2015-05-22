@@ -13,7 +13,7 @@ class HeroSelector(pg.Surface):
     def __init__(self):
         super(HeroSelector, self).__init__(self.size)
 
-        self.choice = None
+        self.choice = ''
 
         self._load_images()
 
@@ -58,6 +58,7 @@ class HeroSelector(pg.Surface):
         self._draw_base()
 
         mx, my = mouseobj.get_pos()
+        presses = mouseobj.get_pressed()
 
         mx -= offset[0]
         my -= offset[1]
@@ -71,13 +72,18 @@ class HeroSelector(pg.Surface):
         pos = iy * 3 + ix
 
         if not self.choice:
-            if mouseobj.get_pressed()[0]:
+            if presses[0]:
                 self.choice = self.hero_names[pos]
 
                 self._base = self._make_base()
                 self._draw_base()
             else:
                 self._draw_tile(pos)
+        elif presses[2]:
+            self.choice = ''
+
+            self._base = self._make_base()
+            self._draw_base()
 
     @classmethod
     def _load_images(cls):

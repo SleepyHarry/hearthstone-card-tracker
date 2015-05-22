@@ -61,8 +61,10 @@ class Textbox(pg.Surface):
             return []
 
         raw = [name for t in collectible_cards.keys()
-               for name, cardobj in collectible_cards[t].items()
-               if self.text.strip().lower() in name.lower()]
+               for name, carddict in collectible_cards[t].items()
+               if self.text.strip().lower() in name.lower()
+               if not (cs.choice and carddict["race"]) or\
+                cs.choice.title() == carddict["race"]]
 
         self.offset = self.offset % len(raw) if raw else 0
 
@@ -73,19 +75,45 @@ class Textbox(pg.Surface):
     def filename_format(file_path):
         """ Replaces certain tokens in file_path with appropriate things """
 
-        file_path = re.sub(r"(?<!%)%DATE%",
+        file_path = re.sub(r"%DATE%",
                            time.strftime("%Y-%m-%d", time.localtime()),
                            file_path)
 
-        file_path = re.sub(r"(?<!%)%TIME%",
+        file_path = re.sub(r"%TIME%",
                            time.strftime("%H%M", time.localtime()),
                            file_path)
 
-        #TODO: %HERO%
+        file_path = re.sub(r"%HERO%",
+                           cs.choice.title(),
+                           file_path)
 
-        file_path = file_path.replace("%%", '%')
+        # file_path = file_path.replace("%%", '%')
 
         return file_path
+
+    def _save(self):
+        #TODO: refocus main window
+        default_name = self.filename_format("%HERO% %TIME% %DATE%")
+        file_path = tkFileDialog.asksaveasfilename(
+            defaultextension="hsd",
+            initialdir="resource/decks",
+            initialfile=default_name)
+
+        file_path = self.filename_format(file_path)
+
+        if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+            self.deck.save(file_path, True)
+        else:
+            #TODO: raise a meaningful error
+            pass
+
+    def _open(self):
+        file_path = tkFileDialog.askopenfilename(
+            defaultextension="hsd",
+            initialdir="resource/decks")
+        if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+            #swap decks in place so that observers are preserved
+            self.deck.replace(ObservableDeck.from_hsd(file_path))
 
     def handle_keyboard_input(self, key):
         """ event should be a pg.KEYDOWN event """
@@ -105,25 +133,9 @@ class Textbox(pg.Surface):
                 elif k == 'r':
                     self.deck.clear()
                 elif k == 's':
-                    #TODO: refocus main window
-                    file_path = tkFileDialog.asksaveasfilename(
-                        defaultextension="hsd",
-                        initialdir="resource/decks")
-
-                    file_path = self.filename_format(file_path)
-
-                    if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                        self.deck.save(file_path, True)
-                    else:
-                        #TODO: raise a meaningful error
-                        pass
+                    self._save()
                 elif k == 'o':
-                    file_path = tkFileDialog.askopenfilename(
-                        defaultextension="hsd",
-                        initialdir="resource/decks")
-                    if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                        #swap decks in place so that observers are preserved
-                        self.deck.replace(ObservableDeck.from_hsd(file_path))
+                    self._open()
         else:
             if key == pg.K_BACKSPACE:
                 #backspace
@@ -192,8 +204,8 @@ outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
 mc = ManaCurve(deck)
 mc_rect = mc.get_rect(left=width/2, top=100)
 
-hs = HeroSelector()
-hs_rect = hs.get_rect(centerx=width/4, top=100)
+cs = HeroSelector()
+cs_rect = cs.get_rect(centerx=width/4, top=100)
 
 tb = Textbox('', (3*width/4, height/16), deck)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
@@ -219,7 +231,7 @@ while True:
 
             tb.handle_keyboard_input(event.key)
 
-    hs.handle_mouse_input(pg.mouse, offset=hs_rect.topleft)
+    cs.handle_mouse_input(pg.mouse, offset=cs_rect.topleft)
 
     screen.fill(colors.bgblue)
 
@@ -234,7 +246,7 @@ while True:
 
     screen.blit(mc, mc_rect)
 
-    screen.blit(hs, hs_rect)
+    screen.blit(cs, cs_rect)
 
     screen.blit(tb, tb_rect)
 
