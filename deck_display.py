@@ -9,8 +9,6 @@ from textFuncs import *
 
 from hsd_util import Deck
 
-bgblue = (27, 30, 37)
-
 all_cards = json.load(open("resource/cards.json"))["cards"]
 
 #This is not perfect. For example, "Misha" and "Devilsaur" were in here
@@ -115,7 +113,7 @@ class DeckObserver(pg.Surface):
 
     def update(self):
         #TODO: should this be in the generic container?
-        self.fill(bgblue)
+        self.fill(colors.bgblue)
 
     @classmethod
     def _load_images(cls):
@@ -195,7 +193,7 @@ class DeckDisplay(DeckObserver):
 
     def update(self):
         #clear
-        self.fill(bgblue)
+        self.fill(colors.bgblue)
 
         deck = sorted(self.deck["cards"].items(),
                       key=lambda x: int(get_card(x[0]).cost))
@@ -232,7 +230,7 @@ class ManaCurve(DeckObserver):
     def _draw_static_canvas(self):
         """ Draw the base of the ManaCurve, which is always present """
         self.fill(colors.yellow)
-        self.fill(bgblue, (1, 1, self.width - 2, self.height - 2))
+        self.fill(colors.bgblue, (1, 1, self.width - 2, self.height - 2))
 
         for i in xrange(8):
             center = (int((i + .5) * self.width / 8), self.height - 20)
@@ -247,7 +245,7 @@ class ManaCurve(DeckObserver):
             self.blit(num, num.get_rect(center=center))
 
     def update(self):
-        self.fill(bgblue, (1, 1, self.width - 2, self.height - 37))
+        self.fill(colors.bgblue, (1, 1, self.width - 2, self.height - 37))
 
         cost_breakdown = Counter()
 

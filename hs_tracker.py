@@ -34,9 +34,7 @@ windll.user32.SetWindowPos(pg.display.get_wm_info()["window"],
 
 log = HSLog()
 
-bgblue = (27, 30, 37)
-
-screen.fill(bgblue)
+screen.fill(colors.bgblue)
 pg.display.flip()
 
 #TODO: ObservableDeck changes
@@ -133,7 +131,7 @@ while True:
                 sys.stderr.flush()
                 _error = True
 
-    screen.fill(bgblue)
+    screen.fill(colors.bgblue)
 
     screen.blit(dd, (0, 0))
 

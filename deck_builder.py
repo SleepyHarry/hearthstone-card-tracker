@@ -6,9 +6,9 @@ import Tkinter, tkFileDialog
 from useful import load_image, colors
 from textFuncs import *
 
-from hsd_util import Deck
 from deck_display import DeckDisplay, ManaCurve, ObservableDeck,\
                          collectible_cards
+from class_selector import HeroSelector
 
 
 pg.init()
@@ -20,7 +20,7 @@ size = width, height = 1280, 960
 fps_tgt = 30
 clock = pg.time.Clock()
 
-bgblue = (27, 30, 37)
+
 
 screen = pg.display.set_mode(size)
 
@@ -190,7 +190,10 @@ outline_rect = dd.get_rect(left=dd_rect.left-1, top=dd_rect.top-1,
                            width=dd_rect.width+2, height=dd_rect.height+2)
 
 mc = ManaCurve(deck)
-mc_rect = mc.get_rect(centerx=width/2, top=100)
+mc_rect = mc.get_rect(left=width/2, top=100)
+
+hs = HeroSelector()
+hs_rect = hs.get_rect(centerx=width/4, top=100)
 
 tb = Textbox('', (3*width/4, height/16), deck)
 tb_rect = tb.get_rect(right=dd_rect.left - 20, centery=height/2)
@@ -216,7 +219,9 @@ while True:
 
             tb.handle_keyboard_input(event.key)
 
-    screen.fill(bgblue)
+    hs.handle_mouse_input(pg.mouse, offset=hs_rect.topleft)
+
+    screen.fill(colors.bgblue)
 
     screen.fill(colors.yellow, outline_rect)
     screen.blit(dd, dd_rect)
@@ -227,9 +232,11 @@ while True:
                 cards_in_deck_text.get_rect(top=dd_rect.bottom + 10,
                                             right=dd_rect.right - 5))
 
-    screen.blit(tb, tb_rect)
-
     screen.blit(mc, mc_rect)
+
+    screen.blit(hs, hs_rect)
+
+    screen.blit(tb, tb_rect)
 
     for i, suggestion in enumerate(tb.suggestions[:10]):
         text = textOutline(fontM, suggestion,

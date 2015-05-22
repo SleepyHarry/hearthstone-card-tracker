@@ -50,8 +50,6 @@ class HSLog:
             if id not in self.seen:
                 self.seen.add(id)
                 yield name
-            else:
-                print("Ha! Caught one!")
 
     @property
     def drawn(self):

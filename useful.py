@@ -41,6 +41,7 @@ def load_image(fullname, colorkey=None):
     
     return image
 
+#enum
 class colors:
     white = (255, 255, 255)
     black = (0, 0, 0)
@@ -50,6 +51,9 @@ class colors:
     yellow = (255, 255, 0)
     magenta = (255, 0, 255)
     cyan = (0, 255, 255)
+
+    #hs
+    bgblue = (27, 30, 37)
 
     @staticmethod
     def grey(lightness=128):
