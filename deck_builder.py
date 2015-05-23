@@ -33,6 +33,8 @@ class Textbox(pg.Surface):
         self.deck = deck
         self.text = initial_text
 
+        self._last_sugg = ''
+
         self.offset = 0
 
         self._update()
@@ -58,6 +60,8 @@ class Textbox(pg.Surface):
         """
 
         if not self.text:
+            if self._last_sugg:
+                return [self._last_sugg]
             return []
 
         raw = [name for t in collectible_cards.keys()
@@ -107,6 +111,8 @@ class Textbox(pg.Surface):
             #TODO: raise a meaningful error
             pass
 
+        return file_path
+
     def _open(self):
         file_path = tkFileDialog.askopenfilename(
             defaultextension="hsd",
@@ -133,7 +139,15 @@ class Textbox(pg.Surface):
                 elif k == 'r':
                     self.deck.clear()
                 elif k == 's':
-                    self._save()
+                    filename = self._save()
+
+                    if shift:
+                        #Save deck, close ourselves and open the tracker
+                        os.system(r"start C:\Python27\pythonw.exe "
+                                  r"hs_tracker.py {}".format(filename))
+
+                        done()
+
                 elif k == 'o':
                     self._open()
         else:
@@ -182,9 +196,9 @@ class Textbox(pg.Surface):
                     suggs = self.suggestions
                     if suggs:
                         self.text = ''
-                        self._update()
 
                         self.deck.add_card(suggs[0])
+                        self._last_sugg = suggs[0]
                 else:
                     self.deck.add_again()
 ##            else:

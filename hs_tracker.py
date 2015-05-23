@@ -101,6 +101,9 @@ while True:
         deck.reset()
     elif any(drawn_dict.values()):
         #TODO: Error handling (wrong deck etc.)
+
+        #TODO: I need to rethink this bit, it's actually quite inconsistent
+        # for dealing with mulligans
         for card in drawn_dict['d']:
             try:
                 deck.take_card(card, remember=True)
