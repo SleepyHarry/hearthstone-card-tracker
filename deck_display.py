@@ -7,6 +7,7 @@ from collections import Counter
 from useful import load_image, colors
 from textFuncs import *
 
+from whoops import *
 from hsd_util import Deck
 
 all_cards = json.load(open("resource/cards.json"))["cards"]

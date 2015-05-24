@@ -6,6 +6,7 @@ import Tkinter, tkFileDialog
 from useful import load_image, colors
 from textFuncs import *
 
+from whoops import *
 from deck_display import DeckDisplay, ManaCurve, ObservableDeck,\
                          collectible_cards
 from class_selector import HeroSelector
@@ -141,10 +142,11 @@ class Textbox(pg.Surface):
                 elif k == 's':
                     filename = self._save()
 
-                    if shift:
+                    #filename is '' if user hit "Cancel"
+                    if shift and filename:
                         #Save deck, close ourselves and open the tracker
-                        os.system(r"start C:\Python27\pythonw.exe "
-                                  r"hs_tracker.py {}".format(filename))
+                        os.system(r'start C:\Python27\pythonw.exe '
+                                  r'hs_tracker.py "{}"'.format(filename))
 
                         done()
 

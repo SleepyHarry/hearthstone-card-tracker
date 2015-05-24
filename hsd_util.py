@@ -12,14 +12,7 @@ import os
 import pickle
 from collections import Counter
 
-class NoSuchDeckExists(Exception):
-    pass
-
-class DeckExistsWarning(Warning):
-    pass
-
-class CardNotInDeckError(Exception):
-    pass
+from whoops import *
 
 class Deck(dict):
     def __init__(self, cards=None, hero='', fmt=''):

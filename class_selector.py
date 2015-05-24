@@ -6,6 +6,8 @@ from math import floor
 
 from useful import load_image, colors
 
+from whoops import *
+
 
 class HeroSelector(pg.Surface):
     size = width, height = 320, 280  #TODO: finalise these

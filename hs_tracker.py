@@ -8,7 +8,7 @@ from useful import colors
 from textFuncs import *
 
 from hscheck import HSLog
-from hsd_util import Deck, CardNotInDeckError
+from whoops import *
 from deck_display import DeckDisplay, ObservableDeck
 
 sys.stderr = open("error.log", 'w')
@@ -37,25 +37,39 @@ log = HSLog()
 screen.fill(colors.bgblue)
 pg.display.flip()
 
-#TODO: ObservableDeck changes
+def open_deck(into_deck, file_path=None):
+    if file_path is None:
+        file_path = tkFileDialog.askopenfilename(
+            defaultextension="hsd",
+            initialdir="resource/decks")
 
-if len(sys.argv) > 1:
-    #we've been given a filename
-    file_path = sys.argv[1]
-else:
-    #TODO: abstract this into a function, as it's repeated further down
-    file_path = tkFileDialog.askopenfilename(
-        defaultextension="hsd",
-        initialdir="resource/decks")
+    if file_path and os.path.splitext(file_path)[-1] == ".hsd":
+        into_deck.replace(ObservableDeck.from_hsd(file_path))
 
-if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-    deck = ObservableDeck.from_hsd(file_path)
-else:
-    #we allow this, on the proviso that later on the user loads a .hsd by using
-    #ctrl+O
-    deck = ObservableDeck()
+deck = ObservableDeck()
+open_deck(deck, sys.argv[1] if len(sys.argv) > 1 else None)
 
 dd = DeckDisplay(deck)
+
+def handle_keyboard_input():
+    keys = pg.key.get_pressed()
+    keymods = pg.key.get_mods()
+
+    shift = bool(keymods & 3)
+    ctrl = bool(keymods & 196)
+
+    if keys[pg.K_ESCAPE]:
+        done()
+
+    if keys[pg.K_x]:
+        global _error
+        _error = False
+
+    if keys[pg.K_r]:
+        deck.reset()
+
+    if ctrl and event.key == pg.K_o:
+        open_deck(deck)
 
 def done():
     log.close_all()
@@ -74,25 +88,7 @@ while True:
             mX, mY = pg.mouse.get_pos()
 
         if event.type == pg.KEYDOWN:
-            keys = pg.key.get_pressed()
-            keymods = pg.key.get_mods()
-
-            shift = bool(keymods & 3)
-            ctrl = bool(keymods & 196)
-
-            if keys[pg.K_ESCAPE]:
-                done()
-
-            if keys[pg.K_x]:
-                _error = False
-
-            if ctrl and event.key == pg.K_o:
-                file_path = tkFileDialog.askopenfilename(
-                    defaultextension="hsd",
-                    initialdir="resource/decks")
-
-                if file_path and os.path.splitext(file_path)[-1] == ".hsd":
-                    deck.replace(ObservableDeck.from_hsd(file_path))
+            handle_keyboard_input()
 
     #get live info
     result, drawn_dict = log.result, log.drawn
@@ -102,21 +98,20 @@ while True:
     elif any(drawn_dict.values()):
         #TODO: Error handling (wrong deck etc.)
 
-        #TODO: I need to rethink this bit, it's actually quite inconsistent
-        # for dealing with mulligans
+        print >> sys.stderr, drawn_dict
+        sys.stderr.flush()
+
         for card in drawn_dict['d']:
             try:
                 deck.take_card(card, remember=True)
             except CardNotInDeckError as e:
                 #Burrowing Mine triggers this, so there are genuine
                 #reasons for it to happen in normal play
-
-                #Also, secrets trigger twice, which is a bug that should be
-                #fixed in hsd_util.py
+                #TODO: blacklist cards
                 print >> sys.stderr, "Card not in deck: ", e.message
                 sys.stderr.flush()
                 _error = True
-        
+
         #mulligans
         for card in drawn_dict['m']:
             deck.add_card(card)
